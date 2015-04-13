@@ -35,9 +35,7 @@ class Fraction {
     }
 
     plus(fraction) {
-        if (!fraction instanceof Fraction) {
-            throw TypeError('wrong type');
-        }
+        fraction = convert(fraction);
 
         var denominator = lcm(fraction.denominator, this.denominator);
         var molecular = denominator / this.denominator * this.molecular * (this.isNegative ? -1 : 1)
@@ -56,6 +54,8 @@ class Fraction {
     }
 
     times(fraction) {
+        fraction = convert(fraction);
+
         var isNegative = !!(fraction.isNegative ^ this.isNegative);
         var molecular = fraction.molecular * this.molecular;
         var denominator = fraction.denominator * this.denominator;
@@ -64,6 +64,17 @@ class Fraction {
         return new Fraction(molecular / g, denominator / g, isNegative);
     }
 
+    equal(fraction) {
+        try {
+            fraction = convert(fraction);
+        } catch (e) {
+            return false;
+        }
+
+        return fraction.molecular === this.molecular
+            && fraction.denominator === this.denominator
+            && fraction.isNegative === this.isNegative;
+    }
 
     toString() {
         return this.isNegative + ' ' + this.molecular + '/' + this.denominator;
@@ -101,6 +112,25 @@ class Fraction {
     }
 }
 
+function convert(value) {
+    if (value instanceof Fraction) {
+        return value;
+    }
+
+    if (!isNumber(value)) {
+        value = parseFloat(value);
+    }
+    if (isNaN(value)) {
+        throw TypeError('can not convert to a number');
+    }
+
+    if (value !== Math.round(value)) {
+        return Fraction.fromFloat(value, 4);
+    }
+
+    return Fraction.fromInterger(value);
+}
+
 function isNumber(value) {
     return Object.prototype.toString.call(value) === '[object Number]';
 }
@@ -113,13 +143,14 @@ function isNumber(value) {
  *  }
  */
 function gcd(a, b) {
-    if (isNaN(a) || isNaN(b)) {
-        throw new Error('number overflow');
-    }
     while (b !== 0) {
         var r = b;
         b = a % b;
         a = r;
+
+        if (isNaN(a) || isNaN(b)) {
+            throw new Error('number overflow');
+        }
     }
     return a;
 }

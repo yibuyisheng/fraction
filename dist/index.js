@@ -120,9 +120,7 @@
 	    }, {
 	        key: 'plus',
 	        value: function plus(fraction) {
-	            if (!fraction instanceof Fraction) {
-	                throw TypeError('wrong type');
-	            }
+	            fraction = convert(fraction);
 
 	            var denominator = lcm(fraction.denominator, this.denominator);
 	            var molecular = denominator / this.denominator * this.molecular * (this.isNegative ? -1 : 1) + denominator / fraction.denominator * fraction.molecular * (fraction.isNegative ? -1 : 1);
@@ -138,12 +136,25 @@
 	    }, {
 	        key: 'times',
 	        value: function times(fraction) {
+	            fraction = convert(fraction);
+
 	            var isNegative = !!(fraction.isNegative ^ this.isNegative);
 	            var molecular = fraction.molecular * this.molecular;
 	            var denominator = fraction.denominator * this.denominator;
 
 	            var g = gcd(Math.abs(molecular), Math.abs(denominator));
 	            return new Fraction(molecular / g, denominator / g, isNegative);
+	        }
+	    }, {
+	        key: 'equal',
+	        value: function equal(fraction) {
+	            try {
+	                fraction = convert(fraction);
+	            } catch (e) {
+	                return false;
+	            }
+
+	            return fraction.molecular === this.molecular && fraction.denominator === this.denominator && fraction.isNegative === this.isNegative;
 	        }
 	    }, {
 	        key: 'toString',
@@ -189,6 +200,25 @@
 	    return Fraction;
 	})();
 
+	function convert(value) {
+	    if (value instanceof Fraction) {
+	        return value;
+	    }
+
+	    if (!isNumber(value)) {
+	        value = parseFloat(value);
+	    }
+	    if (isNaN(value)) {
+	        throw TypeError('can not convert to a number');
+	    }
+
+	    if (value !== Math.round(value)) {
+	        return Fraction.fromFloat(value, 4);
+	    }
+
+	    return Fraction.fromInterger(value);
+	}
+
 	function isNumber(value) {
 	    return Object.prototype.toString.call(value) === '[object Number]';
 	}
@@ -201,13 +231,14 @@
 	 *  }
 	 */
 	function gcd(a, b) {
-	    if (isNaN(a) || isNaN(b)) {
-	        throw new Error('number overflow');
-	    }
 	    while (b !== 0) {
 	        var r = b;
 	        b = a % b;
 	        a = r;
+
+	        if (isNaN(a) || isNaN(b)) {
+	            throw new Error('number overflow');
+	        }
 	    }
 	    return a;
 	}
