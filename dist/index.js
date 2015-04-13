@@ -193,16 +193,23 @@
 	    return Object.prototype.toString.call(value) === '[object Number]';
 	}
 
-	// 最大公约数
+	/**
+	 * 最大公约数
+	 *  function gcd(a, b) {
+	 *      if(b == 0) return a;
+	 *      return gcd(b, a % b);
+	 *  }
+	 */
 	function gcd(a, b) {
-	    var min = Math.min(a, b);
-	    var max = Math.max(a, b);
-
-	    for (var i = min; i > 0; i--) {
-	        if (max % i === 0 && min % i === 0) {
-	            return i;
-	        }
+	    if (isNaN(a) || isNaN(b)) {
+	        throw new Error('number overflow');
 	    }
+	    while (b !== 0) {
+	        var r = b;
+	        b = a % b;
+	        a = r;
+	    }
+	    return a;
 	}
 
 	// 最小公倍数
